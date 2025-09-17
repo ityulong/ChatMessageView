@@ -50,10 +50,25 @@
 
             </LinearLayout>
 
-            <FrameLayout
-                android:id="@+id/mainMessageContainer"
+            <LinearLayout
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <FrameLayout
+                    android:id="@+id/mainMessageContainer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+                <LinearLayout
+                    android:id="@+id/transferStatusContainer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/spacing_line"
+                    android:gravity="end"
+                    android:visibility="gone"/>
+
+            </LinearLayout>
 
         </LinearLayout>
 

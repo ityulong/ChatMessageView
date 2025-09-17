@@ -44,6 +44,7 @@ ext {
     versionName = getLibVersion()
     androidXCoreVersion = '1.0.2'
     androidXAppcompatVersion = '1.0.2'
+    androidXRecyclerViewVersion = '1.1.0'
     circleimageviewVersion = '3.0.0'
     junitVersion = '4.12'
     robolectricVersion = '4.1'

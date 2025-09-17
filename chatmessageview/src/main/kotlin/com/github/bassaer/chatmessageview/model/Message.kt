@@ -2,10 +2,13 @@ package com.github.bassaer.chatmessageview.model
 
 import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
+import android.net.Uri
 
 import com.github.bassaer.chatmessageview.util.*
 
 import java.util.*
+
+import kotlin.math.coerceIn
 
 /**
  * Message object
@@ -97,6 +100,51 @@ class Message {
     var picture: Bitmap? = null
 
     /**
+     * Voice message uri
+     */
+    var voiceUri: Uri? = null
+
+    /**
+     * Voice duration in seconds
+     */
+    var voiceDuration: Int = 0
+
+    /**
+     * Video message uri
+     */
+    var videoUri: Uri? = null
+
+    /**
+     * Video thumbnail
+     */
+    var videoThumbnail: Bitmap? = null
+
+    /**
+     * Generic file uri
+     */
+    var fileUri: Uri? = null
+
+    /**
+     * Generic file name
+     */
+    var fileName: String? = null
+
+    /**
+     * Generic file information (size etc.)
+     */
+    var fileInfo: String? = null
+
+    /**
+     * Progress state for transferable messages
+     */
+    var transferState: TransferState = TransferState.NONE
+
+    /**
+     * Progress value (0-100) for transferable messages
+     */
+    var transferProgress: Int = 0
+
+    /**
      * Message type
      */
     var type: Type? = null
@@ -121,7 +169,18 @@ class Message {
         TEXT,
         PICTURE,
         MAP,
-        LINK
+        LINK,
+        VOICE,
+        VIDEO,
+        FILE
+    }
+
+    enum class TransferState {
+        NONE,
+        UPLOADING,
+        DOWNLOADING,
+        COMPLETED,
+        FAILED
     }
 
     /**
@@ -219,6 +278,38 @@ class Message {
 
         fun setPicture(picture: Bitmap): Builder {
             message.picture = picture
+            return this
+        }
+
+        fun setVoice(uri: Uri?, duration: Int): Builder {
+            message.voiceUri = uri
+            message.voiceDuration = duration
+            message.type = Type.VOICE
+            return this
+        }
+
+        fun setVideo(uri: Uri?, thumbnail: Bitmap?): Builder {
+            message.videoUri = uri
+            message.videoThumbnail = thumbnail
+            message.type = Type.VIDEO
+            return this
+        }
+
+        fun setFile(name: String?, info: String?, uri: Uri?): Builder {
+            message.fileName = name
+            message.fileInfo = info
+            message.fileUri = uri
+            message.type = Type.FILE
+            return this
+        }
+
+        fun setTransferState(state: TransferState): Builder {
+            message.transferState = state
+            return this
+        }
+
+        fun setTransferProgress(progress: Int): Builder {
+            message.transferProgress = progress.coerceIn(0, 100)
             return this
         }
 
