@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/message_text_shape_right"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="@dimen/spacing_micro">
+
+    <ImageView
+        android:id="@+id/message_voice_icon"
+        android:layout_width="@dimen/icon_small"
+        android:layout_height="@dimen/icon_small"
+        android:contentDescription="@string/chat_voice_message"
+        android:src="@android:drawable/ic_btn_speak_now" />
+
+    <TextView
+        android:id="@+id/message_voice_duration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/spacing_micro"
+        android:layout_marginLeft="@dimen/spacing_micro"
+        android:text="@string/chat_voice_duration_placeholder"
+        android:textSize="@dimen/font_normal" />
+
+</LinearLayout>

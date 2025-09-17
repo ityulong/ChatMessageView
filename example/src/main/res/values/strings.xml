@@ -4,4 +4,15 @@
     <string name="options">Options</string>
     <string name="clear_messages">Clear Messages</string>
     <string name="send_picture">Send Picture</string>
+    <string name="send_voice">Send Voice Sample</string>
+    <string name="send_video">Send Video Sample</string>
+    <string name="send_file">Send File Sample</string>
+    <string name="sample_picture_message">Shared a picture</string>
+    <string name="sample_picture_reply">Looks great!</string>
+    <string name="sample_voice_message">Sent a voice memo</string>
+    <string name="sample_voice_reply">Here is my voice reply.</string>
+    <string name="sample_video_message">Sent a video clip</string>
+    <string name="sample_video_reply">Check out this video.</string>
+    <string name="sample_file_message">Shared a file</string>
+    <string name="sample_file_reply">Downloading your file now.</string>
 </resources>

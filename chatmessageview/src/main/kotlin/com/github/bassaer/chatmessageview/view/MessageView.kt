@@ -2,14 +2,17 @@ package com.github.bassaer.chatmessageview.view
 
 import android.content.Context
 import android.os.Handler
+import android.os.Looper
 import android.util.AttributeSet
 import android.view.View
-import android.widget.ListView
 
 import com.github.bassaer.chatmessageview.model.Attribute
 import com.github.bassaer.chatmessageview.model.Message
 import com.github.bassaer.chatmessageview.util.MessageDateComparator
 import com.github.bassaer.chatmessageview.util.TimeUtils
+
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
 import java.lang.ref.WeakReference
 import java.util.*
@@ -20,18 +23,19 @@ import kotlin.collections.ArrayList
  * Simple chat view
  * Created by nakayama on 2016/08/08.
  */
-class MessageView : ListView, View.OnFocusChangeListener {
+class MessageView : RecyclerView, View.OnFocusChangeListener {
 
     /**
      * All contents such as right message, left message, date label
      */
-    private var chatList: MutableList<Any> = ArrayList()
+    private val chatList: MutableList<Any> = ArrayList()
     /**
      * Only messages
      */
-    val messageList = ArrayList<Message>()
+    val messageList: MutableList<Message> = ArrayList()
 
     private lateinit var messageAdapter: MessageAdapter
+    private lateinit var linearLayoutManager: LinearLayoutManager
 
     private lateinit var keyboardAppearListener: OnKeyboardAppearListener
 
@@ -48,48 +52,37 @@ class MessageView : ListView, View.OnFocusChangeListener {
 
     constructor(context: Context, attrs: AttributeSet) : super(context, attrs) {
         attribute = Attribute(context, attrs)
-        init()
+        initialize(context)
     }
 
     constructor(context: Context, attrs: AttributeSet, defStyleAttr: Int) : super(context, attrs, defStyleAttr) {
         attribute = Attribute(context, attrs)
-        init()
+        initialize(context)
     }
 
 
     fun init(list: List<Message>) {
-        chatList = ArrayList()
-        choiceMode = ListView.CHOICE_MODE_NONE
-
-        for (i in list.indices) {
-            addMessage(list[i])
-        }
+        messageList.clear()
+        messageList.addAll(list)
         refresh()
-        init()
     }
 
     fun init(attribute: Attribute) {
         this.attribute = attribute
-        init()
+        if (::messageAdapter.isInitialized) {
+            messageAdapter.setAttribute(attribute)
+        }
     }
 
     /**
      * Initialize list
      */
     fun init() {
-        dividerHeight = 0
-        messageAdapter = MessageAdapter(context, 0, chatList, attribute)
-
-        adapter = messageAdapter
-
-        val weakMessageAdapter: WeakReference<MessageAdapter> = WeakReference(messageAdapter)
-        val handler = Handler()
-        val refreshTimer = Timer(true)
-        refreshTimer.schedule(object : TimerTask() {
-            override fun run() {
-                handler.post { weakMessageAdapter.get()?.notifyDataSetChanged() }
-            }
-        }, 1000, refreshInterval)
+        if (!::messageAdapter.isInitialized) {
+            initialize(context)
+        } else {
+            messageAdapter.notifyDataSetChanged()
+        }
     }
 
     /**
@@ -112,7 +105,18 @@ class MessageView : ListView, View.OnFocusChangeListener {
         val indexOfMessage = messageList.indexOf(message)
         val messageToUpdate = messageList[indexOfMessage]
         messageToUpdate.status = status
-        messageAdapter.notifyDataSetChanged()
+        notifyItemChanged(messageToUpdate)
+    }
+
+    fun updateMessageTransfer(message: Message, state: Message.TransferState, progress: Int) {
+        val indexOfMessage = messageList.indexOf(message)
+        if (indexOfMessage < 0) {
+            return
+        }
+        val messageToUpdate = messageList[indexOfMessage]
+        messageToUpdate.transferState = state
+        messageToUpdate.transferProgress = progress.coerceIn(0, 100)
+        notifyItemChanged(messageToUpdate)
     }
 
     /**
@@ -203,7 +207,13 @@ class MessageView : ListView, View.OnFocusChangeListener {
     }
 
     fun scrollToEnd() {
-        smoothScrollToPosition(count - 1)
+        if (!::messageAdapter.isInitialized) {
+            return
+        }
+        val targetPosition = messageAdapter.itemCount - 1
+        if (targetPosition >= 0) {
+            smoothScrollToPosition(targetPosition)
+        }
     }
 
     fun setLeftBubbleColor(color: Int) {
@@ -293,5 +303,33 @@ class MessageView : ListView, View.OnFocusChangeListener {
 
     private fun setAttribute() {
         messageAdapter.setAttribute(attribute)
+    }
+
+    private fun initialize(context: Context) {
+        linearLayoutManager = LinearLayoutManager(context)
+        layoutManager = linearLayoutManager
+        messageAdapter = MessageAdapter(context, chatList, attribute)
+        adapter = messageAdapter
+        val weakMessageAdapter: WeakReference<MessageAdapter> = WeakReference(messageAdapter)
+        val handler = Handler(Looper.getMainLooper())
+        val refreshTimer = Timer(true)
+        refreshTimer.schedule(object : TimerTask() {
+            override fun run() {
+                handler.post { weakMessageAdapter.get()?.notifyDataSetChanged() }
+            }
+        }, 1000, refreshInterval)
+        setOnFocusChangeListener(this)
+    }
+
+    private fun notifyItemChanged(message: Message) {
+        if (!::messageAdapter.isInitialized) {
+            return
+        }
+        val adapterIndex = chatList.indexOf(message)
+        if (adapterIndex >= 0) {
+            messageAdapter.notifyItemChanged(adapterIndex)
+        } else {
+            messageAdapter.notifyDataSetChanged()
+        }
     }
 }

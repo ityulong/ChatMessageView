@@ -4,12 +4,13 @@ import android.content.Context
 import android.content.res.ColorStateList
 import android.graphics.drawable.Drawable
 import android.os.Handler
+import android.os.Looper
 import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.inputmethod.InputMethodManager
-import android.widget.AdapterView
 import android.widget.LinearLayout
 
 import androidx.core.content.ContextCompat
@@ -65,17 +66,20 @@ class ChatView : LinearLayout {
         messageView.init(attribute)
 
         messageView.isFocusableInTouchMode = true
-        //if touched Chat screen
-        messageView.onItemClickListener = AdapterView.OnItemClickListener { _, _, _, _ -> hideKeyboard() }
+        messageView.setOnTouchListener { _, event ->
+            if (event.action == MotionEvent.ACTION_DOWN) {
+                hideKeyboard()
+            }
+            false
+        }
 
-        //if touched empty space
         chatContainer.setOnClickListener { hideKeyboard() }
 
         messageView.setOnKeyboardAppearListener(object : MessageView.OnKeyboardAppearListener {
             override fun onKeyboardAppeared(hasChanged: Boolean) {
                 //Appeared keyboard
                 if (hasChanged) {
-                    Handler().postDelayed({
+                    Handler(Looper.getMainLooper()).postDelayed({
                         //Scroll to end
                         messageView.scrollToEnd()
                     }, 500)
@@ -222,6 +226,10 @@ class ChatView : LinearLayout {
 
     fun updateMessageStatus(message: Message, status: Int) {
         messageView.updateMessageStatus(message, status)
+    }
+
+    fun updateMessageTransfer(message: Message, state: Message.TransferState, progress: Int) {
+        messageView.updateMessageTransfer(message, state, progress)
     }
 
     fun setOnBubbleClickListener(listener: Message.OnBubbleClickListener) {

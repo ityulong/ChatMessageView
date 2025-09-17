@@ -10,6 +10,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.text.InputType;
@@ -73,6 +74,8 @@ public class MessengerActivity extends Activity {
     private int mReplyDelay = -1;
 
     private static final int READ_REQUEST_CODE = 100;
+    private static final int TRANSFER_UPDATE_INTERVAL = 400;
+    private static final int TRANSFER_STEP = 20;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -169,7 +172,7 @@ public class MessengerActivity extends Activity {
                 //Reset edit text
                 mChatView.setInputText("");
 
-                receiveMessage(message.getText());
+                receiveMessage(message);
             }
 
         });
@@ -196,39 +199,106 @@ public class MessengerActivity extends Activity {
         startActivityForResult(intent, READ_REQUEST_CODE);
     }
 
-    private void receiveMessage(String sendText) {
-        //Ignore hey
-        if (!sendText.contains("hey")) {
-
-            //Receive message
-            final Message receivedMessage = new Message.Builder()
-                    .setUser(mUsers.get(1))
-                    .setRight(false)
-                    .setText(ChatBot.INSTANCE.talk(mUsers.get(0).getName(), sendText))
-                    .setStatusIconFormatter(new MyMessageStatusFormatter(MessengerActivity.this))
-                    .setStatusTextFormatter(new MyMessageStatusFormatter(MessengerActivity.this))
-                    .setStatusStyle(Message.Companion.getSTATUS_ICON())
-                    .setStatus(MyMessageStatusFormatter.STATUS_DELIVERED)
-                    .build();
-
-            if (sendText.equals( Message.Type.PICTURE.name())) {
-                receivedMessage.setText("Nice!");
-            }
-
-            // This is a demo bot
-            // Return within 3 seconds
-            if (mReplyDelay < 0) {
-                mReplyDelay = (new Random().nextInt(4) + 1) * 1000;
-            }
-            new Handler().postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    mChatView.receive(receivedMessage);
-                    //Add message list
-                    mMessageList.add(receivedMessage);
-                }
-            }, mReplyDelay);
+    private void receiveMessage(final Message lastMessage) {
+        String originalText = lastMessage.getText();
+        if (originalText != null && originalText.contains("hey")) {
+            return;
         }
+
+        Message.Type messageType = lastMessage.getType();
+        if (messageType == null) {
+            messageType = Message.Type.TEXT;
+        }
+
+        final Message response;
+        switch (messageType) {
+            case PICTURE:
+                Bitmap replyPicture = BitmapFactory.decodeResource(getResources(), R.drawable.face_1);
+                response = new Message.Builder()
+                        .setUser(mUsers.get(1))
+                        .setRight(false)
+                        .setText(getString(R.string.sample_picture_reply))
+                        .setPicture(replyPicture)
+                        .setType(Message.Type.PICTURE)
+                        .setStatusIconFormatter(new MyMessageStatusFormatter(MessengerActivity.this))
+                        .setStatusTextFormatter(new MyMessageStatusFormatter(MessengerActivity.this))
+                        .setStatusStyle(Message.Companion.getSTATUS_ICON())
+                        .setStatus(MyMessageStatusFormatter.STATUS_DELIVERED)
+                        .setTransferState(Message.TransferState.DOWNLOADING)
+                        .setTransferProgress(0)
+                        .build();
+                break;
+            case VOICE:
+                response = new Message.Builder()
+                        .setUser(mUsers.get(1))
+                        .setRight(false)
+                        .setText(getString(R.string.sample_voice_reply))
+                        .setVoice(Uri.parse("https://example.com/voice_reply.aac"), Math.max(4, lastMessage.getVoiceDuration()))
+                        .setStatusIconFormatter(new MyMessageStatusFormatter(MessengerActivity.this))
+                        .setStatusTextFormatter(new MyMessageStatusFormatter(MessengerActivity.this))
+                        .setStatusStyle(Message.Companion.getSTATUS_ICON())
+                        .setStatus(MyMessageStatusFormatter.STATUS_DELIVERED)
+                        .setTransferState(Message.TransferState.DOWNLOADING)
+                        .setTransferProgress(0)
+                        .build();
+                break;
+            case VIDEO:
+                Bitmap videoThumb = BitmapFactory.decodeResource(getResources(), R.drawable.face_1);
+                response = new Message.Builder()
+                        .setUser(mUsers.get(1))
+                        .setRight(false)
+                        .setText(getString(R.string.sample_video_reply))
+                        .setVideo(Uri.parse("https://example.com/video_reply.mp4"), videoThumb)
+                        .setStatusIconFormatter(new MyMessageStatusFormatter(MessengerActivity.this))
+                        .setStatusTextFormatter(new MyMessageStatusFormatter(MessengerActivity.this))
+                        .setStatusStyle(Message.Companion.getSTATUS_ICON())
+                        .setStatus(MyMessageStatusFormatter.STATUS_DELIVERED)
+                        .setTransferState(Message.TransferState.DOWNLOADING)
+                        .setTransferProgress(0)
+                        .build();
+                break;
+            case FILE:
+                response = new Message.Builder()
+                        .setUser(mUsers.get(1))
+                        .setRight(false)
+                        .setText(getString(R.string.sample_file_reply))
+                        .setFile("Project_Plan.pdf", "1.2 MB", Uri.parse("https://example.com/project-plan.pdf"))
+                        .setStatusIconFormatter(new MyMessageStatusFormatter(MessengerActivity.this))
+                        .setStatusTextFormatter(new MyMessageStatusFormatter(MessengerActivity.this))
+                        .setStatusStyle(Message.Companion.getSTATUS_ICON())
+                        .setStatus(MyMessageStatusFormatter.STATUS_DELIVERED)
+                        .setTransferState(Message.TransferState.DOWNLOADING)
+                        .setTransferProgress(0)
+                        .build();
+                break;
+            default:
+                String talkSource = originalText == null ? "" : originalText;
+                response = new Message.Builder()
+                        .setUser(mUsers.get(1))
+                        .setRight(false)
+                        .setText(ChatBot.INSTANCE.talk(mUsers.get(0).getName(), talkSource))
+                        .setStatusIconFormatter(new MyMessageStatusFormatter(MessengerActivity.this))
+                        .setStatusTextFormatter(new MyMessageStatusFormatter(MessengerActivity.this))
+                        .setStatusStyle(Message.Companion.getSTATUS_ICON())
+                        .setStatus(MyMessageStatusFormatter.STATUS_DELIVERED)
+                        .build();
+                break;
+        }
+
+        if (mReplyDelay < 0) {
+            mReplyDelay = (new Random().nextInt(4) + 1) * 1000;
+        }
+
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mChatView.receive(response);
+                mMessageList.add(response);
+                if (response.getTransferState() == Message.TransferState.DOWNLOADING) {
+                    simulateTransfer(response, Message.TransferState.DOWNLOADING);
+                }
+            }
+        }, mReplyDelay);
     }
 
     @Override
@@ -242,7 +312,7 @@ public class MessengerActivity extends Activity {
             Bitmap picture = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
             Message message = new Message.Builder()
                     .setRight(true)
-                    .setText(Message.Type.PICTURE.name())
+                    .setText(getString(R.string.sample_picture_message))
                     .setUser(mUsers.get(0))
                     .hideIcon(true)
                     .setPicture(picture)
@@ -250,11 +320,15 @@ public class MessengerActivity extends Activity {
                     .setStatusIconFormatter(new MyMessageStatusFormatter(MessengerActivity.this))
                     .setStatusStyle(Message.Companion.getSTATUS_ICON())
                     .setStatus(MyMessageStatusFormatter.STATUS_DELIVERED)
+                    .setTransferState(Message.TransferState.UPLOADING)
+                    .setTransferProgress(0)
                     .build();
             mChatView.send(message);
             //Add message list
             mMessageList.add(message);
-            receiveMessage(Message.Type.PICTURE.name());
+            mChatView.updateMessageTransfer(message, Message.TransferState.UPLOADING, 0);
+            simulateTransfer(message, Message.TransferState.UPLOADING);
+            receiveMessage(message);
         } catch (IOException e) {
             e.printStackTrace();
             Toast.makeText(this, getString(R.string.error), Toast.LENGTH_SHORT).show();
@@ -311,7 +385,7 @@ public class MessengerActivity extends Activity {
         }
         MessageView messageView = mChatView.getMessageView();
         messageView.init(messages);
-        messageView.setSelection(messageView.getCount() - 1);
+        messageView.scrollToEnd();
     }
 
     @Override
@@ -339,9 +413,97 @@ public class MessengerActivity extends Activity {
         mReplyDelay = replyDelay;
     }
 
+    private void sendVoiceSample() {
+        Message message = new Message.Builder()
+                .setUser(mUsers.get(0))
+                .setRight(true)
+                .setText(getString(R.string.sample_voice_message))
+                .hideIcon(true)
+                .setVoice(Uri.parse("file:///sdcard/voices/sample_voice.aac"), 12)
+                .setStatusIconFormatter(new MyMessageStatusFormatter(this))
+                .setStatusTextFormatter(new MyMessageStatusFormatter(this))
+                .setStatusStyle(Message.Companion.getSTATUS_ICON())
+                .setStatus(MyMessageStatusFormatter.STATUS_DELIVERED)
+                .setTransferState(Message.TransferState.UPLOADING)
+                .setTransferProgress(0)
+                .build();
+
+        mChatView.send(message);
+        mMessageList.add(message);
+        mChatView.updateMessageTransfer(message, Message.TransferState.UPLOADING, 0);
+        simulateTransfer(message, Message.TransferState.UPLOADING);
+        receiveMessage(message);
+    }
+
+    private void sendVideoSample() {
+        Bitmap thumbnail = BitmapFactory.decodeResource(getResources(), R.drawable.face_2);
+        Message message = new Message.Builder()
+                .setUser(mUsers.get(0))
+                .setRight(true)
+                .setText(getString(R.string.sample_video_message))
+                .hideIcon(true)
+                .setVideo(Uri.parse("file:///sdcard/videos/sample_video.mp4"), thumbnail)
+                .setStatusIconFormatter(new MyMessageStatusFormatter(this))
+                .setStatusTextFormatter(new MyMessageStatusFormatter(this))
+                .setStatusStyle(Message.Companion.getSTATUS_ICON())
+                .setStatus(MyMessageStatusFormatter.STATUS_DELIVERED)
+                .setTransferState(Message.TransferState.UPLOADING)
+                .setTransferProgress(0)
+                .build();
+
+        mChatView.send(message);
+        mMessageList.add(message);
+        mChatView.updateMessageTransfer(message, Message.TransferState.UPLOADING, 0);
+        simulateTransfer(message, Message.TransferState.UPLOADING);
+        receiveMessage(message);
+    }
+
+    private void sendFileSample() {
+        Message message = new Message.Builder()
+                .setUser(mUsers.get(0))
+                .setRight(true)
+                .setText(getString(R.string.sample_file_message))
+                .hideIcon(true)
+                .setFile("Budget.xlsx", "560 KB", Uri.parse("file:///sdcard/Download/budget.xlsx"))
+                .setStatusIconFormatter(new MyMessageStatusFormatter(this))
+                .setStatusTextFormatter(new MyMessageStatusFormatter(this))
+                .setStatusStyle(Message.Companion.getSTATUS_ICON())
+                .setStatus(MyMessageStatusFormatter.STATUS_DELIVERED)
+                .setTransferState(Message.TransferState.UPLOADING)
+                .setTransferProgress(0)
+                .build();
+
+        mChatView.send(message);
+        mMessageList.add(message);
+        mChatView.updateMessageTransfer(message, Message.TransferState.UPLOADING, 0);
+        simulateTransfer(message, Message.TransferState.UPLOADING);
+        receiveMessage(message);
+    }
+
+    private void simulateTransfer(final Message message, final Message.TransferState runningState) {
+        final Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+            private int progress = message.getTransferProgress();
+
+            @Override
+            public void run() {
+                progress = Math.min(100, progress + TRANSFER_STEP);
+                if (progress >= 100) {
+                    mChatView.updateMessageTransfer(message, Message.TransferState.COMPLETED, 100);
+                } else {
+                    mChatView.updateMessageTransfer(message, runningState, progress);
+                    handler.postDelayed(this, TRANSFER_UPDATE_INTERVAL);
+                }
+            }
+        });
+    }
+
     private void showDialog() {
         final String[] items = {
                 getString(R.string.send_picture),
+                getString(R.string.send_voice),
+                getString(R.string.send_video),
+                getString(R.string.send_file),
                 getString(R.string.clear_messages)
         };
 
@@ -355,6 +517,15 @@ public class MessengerActivity extends Activity {
                                 openGallery();
                                 break;
                             case 1:
+                                sendVoiceSample();
+                                break;
+                            case 2:
+                                sendVideoSample();
+                                break;
+                            case 3:
+                                sendFileSample();
+                                break;
+                            case 4:
                                 mChatView.getMessageView().removeAll();
                                 break;
                         }

@@ -2,6 +2,7 @@ package com.github.bassaer.example;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.util.Base64;
 
 import com.github.bassaer.chatmessageview.model.Message;
@@ -75,6 +76,28 @@ public class MessageList {
             saveMessage.setPictureString(Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT));
         }
 
+        if (message.getVoiceUri() != null) {
+            saveMessage.setVoiceUri(message.getVoiceUri().toString());
+        }
+        saveMessage.setVoiceDuration(message.getVoiceDuration());
+
+        if (message.getVideoUri() != null) {
+            saveMessage.setVideoUri(message.getVideoUri().toString());
+        }
+        if (message.getVideoThumbnail() != null) {
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            message.getVideoThumbnail().compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+            saveMessage.setVideoThumbnailString(Base64.encodeToString(outputStream.toByteArray(), Base64.DEFAULT));
+        }
+
+        if (message.getFileUri() != null) {
+            saveMessage.setFileUri(message.getFileUri().toString());
+        }
+        saveMessage.setFileName(message.getFileName());
+        saveMessage.setFileInfo(message.getFileInfo());
+        saveMessage.setTransferState(message.getTransferState().name());
+        saveMessage.setTransferProgress(message.getTransferProgress());
+
         return saveMessage;
     }
 
@@ -93,6 +116,26 @@ public class MessageList {
             byte[] bytes = Base64.decode(saveMessage.getPictureString().getBytes(), Base64.DEFAULT);
             message.setPicture(BitmapFactory.decodeByteArray(bytes, 0, bytes.length));
         }
+        if (saveMessage.getVoiceUri() != null) {
+            message.setVoiceUri(Uri.parse(saveMessage.getVoiceUri()));
+            message.setVoiceDuration(saveMessage.getVoiceDuration());
+        }
+        if (saveMessage.getVideoUri() != null) {
+            message.setVideoUri(Uri.parse(saveMessage.getVideoUri()));
+        }
+        if (saveMessage.getVideoThumbnailString() != null) {
+            byte[] videoBytes = Base64.decode(saveMessage.getVideoThumbnailString().getBytes(), Base64.DEFAULT);
+            message.setVideoThumbnail(BitmapFactory.decodeByteArray(videoBytes, 0, videoBytes.length));
+        }
+        if (saveMessage.getFileUri() != null) {
+            message.setFileUri(Uri.parse(saveMessage.getFileUri()));
+        }
+        message.setFileName(saveMessage.getFileName());
+        message.setFileInfo(saveMessage.getFileInfo());
+        if (saveMessage.getTransferState() != null) {
+            message.setTransferState(Message.TransferState.valueOf(saveMessage.getTransferState()));
+        }
+        message.setTransferProgress(saveMessage.getTransferProgress());
         return message;
     }
 
@@ -104,6 +147,15 @@ public class MessageList {
         private boolean mRightMessage;
         private String mPictureString;
         private Message.Type mType;
+        private String mVoiceUri;
+        private int mVoiceDuration;
+        private String mVideoUri;
+        private String mVideoThumbnailString;
+        private String mFileUri;
+        private String mFileName;
+        private String mFileInfo;
+        private String mTransferState;
+        private int mTransferProgress;
 
         public SaveMessage(int id, String username, String content, Calendar createdAt, boolean isRightMessage) {
             mId = id;
@@ -147,6 +199,78 @@ public class MessageList {
 
         public void setType(Message.Type type) {
             mType = type;
+        }
+
+        public String getVoiceUri() {
+            return mVoiceUri;
+        }
+
+        public void setVoiceUri(String voiceUri) {
+            mVoiceUri = voiceUri;
+        }
+
+        public int getVoiceDuration() {
+            return mVoiceDuration;
+        }
+
+        public void setVoiceDuration(int voiceDuration) {
+            mVoiceDuration = voiceDuration;
+        }
+
+        public String getVideoUri() {
+            return mVideoUri;
+        }
+
+        public void setVideoUri(String videoUri) {
+            mVideoUri = videoUri;
+        }
+
+        public String getVideoThumbnailString() {
+            return mVideoThumbnailString;
+        }
+
+        public void setVideoThumbnailString(String videoThumbnailString) {
+            mVideoThumbnailString = videoThumbnailString;
+        }
+
+        public String getFileUri() {
+            return mFileUri;
+        }
+
+        public void setFileUri(String fileUri) {
+            mFileUri = fileUri;
+        }
+
+        public String getFileName() {
+            return mFileName;
+        }
+
+        public void setFileName(String fileName) {
+            mFileName = fileName;
+        }
+
+        public String getFileInfo() {
+            return mFileInfo;
+        }
+
+        public void setFileInfo(String fileInfo) {
+            mFileInfo = fileInfo;
+        }
+
+        public String getTransferState() {
+            return mTransferState;
+        }
+
+        public void setTransferState(String transferState) {
+            mTransferState = transferState;
+        }
+
+        public int getTransferProgress() {
+            return mTransferProgress;
+        }
+
+        public void setTransferProgress(int transferProgress) {
+            mTransferProgress = transferProgress;
         }
     }
 }

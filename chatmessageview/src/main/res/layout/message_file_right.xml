@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/message_text_shape_right"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:padding="@dimen/spacing_micro">
+
+    <ImageView
+        android:id="@+id/message_file_icon"
+        android:layout_width="@dimen/icon_small"
+        android:layout_height="@dimen/icon_small"
+        android:contentDescription="@string/chat_file_message"
+        android:src="@android:drawable/ic_menu_save" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/spacing_micro"
+        android:layout_marginLeft="@dimen/spacing_micro"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/message_file_name"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/chat_file_unknown"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/message_file_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/chat_file_size_placeholder"
+            android:textSize="@dimen/font_small" />
+    </LinearLayout>
+
+</LinearLayout>

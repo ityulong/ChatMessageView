@@ -23,5 +23,17 @@
     <string name="send">Send</string>
     <string name="attach">Add attachment</string>
 
+    <string name="chat_transfer_uploading">Uploading %1$d%%</string>
+    <string name="chat_transfer_downloading">Downloading %1$d%%</string>
+    <string name="chat_transfer_completed">Transfer complete</string>
+    <string name="chat_transfer_failed">Transfer failed</string>
+    <string name="chat_voice_message">Voice message</string>
+    <string name="chat_voice_duration_placeholder">0″</string>
+    <string name="chat_voice_duration_seconds">%1$d″</string>
+    <string name="chat_video_message">Video message</string>
+    <string name="chat_file_message">File message</string>
+    <string name="chat_file_unknown">Unknown file</string>
+    <string name="chat_file_size_placeholder">0 B</string>
+
 
 </resources>
